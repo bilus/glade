@@ -2,15 +2,27 @@
 # You typically do not need to edit this file
 
 packages = [
+  { name = "decepticon", version = "1.0.1", build_tools = ["gleam"], requirements = ["gleam_stdlib"], otp_app = "decepticon", source = "hex", outer_checksum = "B73FE4EB3441BDD499AFBF45FE977AA496B9EF0D03EC429BEB1C9A6C752A6B57" },
+  { name = "glam", version = "2.0.1", build_tools = ["gleam"], requirements = ["gleam_stdlib"], otp_app = "glam", source = "hex", outer_checksum = "66EC3BCD632E51EED029678F8DF419659C1E57B1A93D874C5131FE220DFAD2B2" },
+  { name = "glance", version = "2.0.0", build_tools = ["gleam"], requirements = ["gleam_stdlib", "glexer"], otp_app = "glance", source = "hex", outer_checksum = "784CE3B5658CF589B2E811031992FDADDFA9C7FD2A51F1140EE019F121D6D0EB" },
+  { name = "glance_printer", version = "2.0.0", build_tools = ["gleam"], requirements = ["glam", "glance", "gleam_stdlib"], otp_app = "glance_printer", source = "hex", outer_checksum = "704F7D74070D33715FE92004271856ABAE05D26A846B95F667E53113F056F4D9" },
   { name = "gleam_regexp", version = "1.0.0", build_tools = ["gleam"], requirements = ["gleam_stdlib"], otp_app = "gleam_regexp", source = "hex", outer_checksum = "A3655FDD288571E90EE9C4009B719FEF59FA16AFCDF3952A76A125AF23CF1592" },
   { name = "gleam_stdlib", version = "0.53.0", build_tools = ["gleam"], requirements = [], otp_app = "gleam_stdlib", source = "hex", outer_checksum = "53F3E1E56F692C20FA3E0A23650AC46592464E40D8EF3EC7F364FB328E73CDF5" },
+  { name = "gleamgen", version = "0.3.2", build_tools = ["gleam"], requirements = ["glam", "gleam_stdlib"], otp_app = "gleamgen", source = "hex", outer_checksum = "13526FFF50DBB61BBE4AFA87A8106739B0B2F0B4950605C172BE9C2B99FBB512" },
   { name = "gleeunit", version = "1.3.0", build_tools = ["gleam"], requirements = ["gleam_stdlib"], otp_app = "gleeunit", source = "hex", outer_checksum = "0E6C83834BA65EDCAAF4FE4FB94AC697D9262D83E6F58A750D63C9F6C8A9D9FF" },
   { name = "glexer", version = "2.1.0", build_tools = ["gleam"], requirements = ["gleam_stdlib"], otp_app = "glexer", source = "hex", outer_checksum = "F74FB4F78C3C1E158DF15A7226F33A662672F58EEF1DFE6593B7FCDA38B0A0EB" },
+  { name = "leviathan", version = "1.0.0", build_tools = ["gleam"], requirements = ["gleam_stdlib"], otp_app = "leviathan", source = "hex", outer_checksum = "00CBF258292361279B494E9C6BC88D994F4BAC625B8E3BCB9178A45C7896E133" },
   { name = "nibble", version = "1.1.3", build_tools = ["gleam"], requirements = ["gleam_regexp", "gleam_stdlib"], otp_app = "nibble", source = "hex", outer_checksum = "A27639325FCD3CD70A26AD0F5425A6FA72BFBC30F74239FB5F4087E84D7D619E" },
 ]
 
 [requirements]
+decepticon = { version = ">= 1.0.1 and < 2.0.0" }
+glance = { version = ">= 2.0.0 and < 3.0.0" }
+glance_printer = { version = ">= 2.0.0 and < 3.0.0" }
+gleam_regexp = { version = ">= 1.0.0 and < 2.0.0" }
 gleam_stdlib = { version = ">= 0.44.0 and < 2.0.0" }
+gleamgen = { version = ">= 0.3.2 and < 1.0.0" }
 gleeunit = { version = ">= 1.0.0 and < 2.0.0" }
 glexer = { version = ">= 2.1.0 and < 3.0.0" }
+leviathan = { version = ">= 1.0.0 and < 2.0.0" }
 nibble = { version = ">= 1.1.3 and < 2.0.0" }

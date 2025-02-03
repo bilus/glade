@@ -1,26 +1,23 @@
-import gleam/function
 import gleam/int
-import gleam/list
 import gleam/order
 import gleam/regexp
-import gleam/result
 import gleam/set
 import gleam/string
 import nibble/lexer
-
-// type Abc(a, b) = Simple(a) | Complex(a, b)
 
 pub type Token {
   TypeKeyword
   TypeName(String)
   GenericTypeName(String)
-  Pipe
+  VerticalBar
   Eq
   LParen
   RParen
   Comma
-  Indent(Int)
-  Unindent(Int)
+  Indent
+  //(Int)
+  Dedent
+  //(Int)
 }
 
 type LexerMode {
@@ -39,9 +36,9 @@ pub fn new() -> Lexer {
     [
       indentation(),
       lexer.keyword("type", "\\s+", TypeKeyword),
-      lexer.identifier("[A-Za-z]", "[A-Za-z0-9_]", set.new(), TypeName),
+      lexer.identifier("[A-Z]", "[A-Za-z0-9_]", set.new(), TypeName),
       lexer.identifier("[a-z]", "[A-Za-z0-9_]", set.new(), GenericTypeName),
-      lexer.token("|", Pipe),
+      lexer.token("|", VerticalBar),
       lexer.token("=", Eq),
       lexer.token("(", LParen),
       lexer.token(")", RParen),
@@ -54,6 +51,12 @@ pub fn new() -> Lexer {
 }
 
 fn indentation() -> lexer.Matcher(Token, LexerMode) {
+  // TODO: Generate pairs of Indent - Dedent
+  // properly, matching the indentation levels.
+  // Write tests
+
+  // TODO: Add Dedent token for EOF, if it isn't already there
+  // (no newline at the end of the file)
   let assert Ok(is_indent) = regexp.from_string("^\\n[ \\t]*")
   use current_mode: LexerMode, lexeme, lookahead <- lexer.custom
 
@@ -66,22 +69,16 @@ fn indentation() -> lexer.Matcher(Token, LexerMode) {
       let mode = LexerMode(indent: spaces)
 
       case int.compare(spaces, current_mode.indent) {
-        order.Lt -> lexer.Keep(Unindent(spaces), mode)
+        order.Lt -> lexer.Keep(Dedent, mode)
         order.Eq if spaces == 0 -> lexer.Drop(mode)
-        order.Eq -> lexer.Keep(Indent(spaces), mode)
-        order.Gt -> lexer.Keep(Indent(spaces), mode)
+        order.Eq -> lexer.Drop(current_mode)
+        order.Gt -> lexer.Keep(Indent, mode)
       }
     }
   }
 }
 
-pub fn run(lx: Lexer, source: String) -> Result(List(Token), Error) {
+pub fn run(lx: Lexer, source: String) -> Result(List(lexer.Token(Token)), Error) {
   source
   |> lexer.run_advanced(LexerMode(0), lx.impl)
-  |> result.map(list.map(_, to_token))
-}
-
-fn to_token(lexer_token: lexer.Token(Token)) -> Token {
-  let lexer.Token(_, _, value) = lexer_token
-  value
 }
