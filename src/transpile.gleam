@@ -1,7 +1,6 @@
 import elm/ast as elm
 import glance
-import glance_printer.{print}
-import gleam/io
+import glance_printer
 import gleam/list
 import gleam/result
 
