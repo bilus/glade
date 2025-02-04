@@ -1,3 +1,11 @@
+pub type Module {
+  Module(declarations: List(Declaration))
+}
+
+pub type Declaration {
+  CustomTypeDeclaration(Type)
+}
+
 pub type TypeName {
   TypeName(name: String)
 }

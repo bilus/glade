@@ -56,6 +56,11 @@ pub fn custom_type_parser() -> Parser(ast.Type, ctx) {
   return(ast.Type(type_name, generics, constructors))
 }
 
+pub fn module_parser() -> Parser(ast.Module, ctx) {
+  use custom_type <- do(custom_type_parser())
+  return(ast.Module(declarations: [ast.CustomTypeDeclaration(custom_type)]))
+}
+
 pub fn run(elm_source: String, parser: Parser(a, ctx)) -> Result(a, Error(ctx)) {
   use tokens <- result.try(
     lexer.new()
