@@ -7,6 +7,7 @@ import nibble/lexer
 
 pub type Token {
   TypeKeyword
+  UnitKeyword
   TypeName(String)
   GenericTypeName(String)
   VerticalBar

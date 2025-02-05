@@ -16,10 +16,9 @@ pub type RuntimeError(ctx) {
 pub fn run() {
   io.debug("main")
   let elm_src =
-    "
-type Maybe a
-  = Just a
-  | Nothing
+    "type Foo
+  = Foo Unit
+  | Bar Unit
 "
   use elm_ast <- result.try(
     parser.run(elm_src, parser.module_parser())
@@ -45,6 +44,8 @@ type Maybe a
 }
 
 pub fn main() {
+  print_glance_output()
+
   case run() {
     Ok(_) -> io.debug("Success")
     Error(TranspileError(_)) -> io.debug("Transpile error")
@@ -62,4 +63,17 @@ pub fn main() {
     Error(InternalError(msg)) -> io.debug("Internal error: " <> msg)
     _ -> io.debug("Unknown error")
   }
+}
+
+fn print_glance_output() {
+  let gleam =
+    "
+pub type Foo {
+  Foo(Nil, Nil)
+  Bar(Nil)
+}
+"
+  use ast <- result.try(glance.module(gleam))
+  io.debug(ast)
+  Ok(Nil)
 }

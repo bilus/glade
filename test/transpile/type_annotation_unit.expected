@@ -1,0 +1,4 @@
+pub type Foo {
+  Foo(Nil, Nil)
+  Bar(Nil)
+}
