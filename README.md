@@ -1,22 +1,22 @@
-# glade
+# glelm
 
 TODO: Description, usage as cli, usage as a library.
 
-[![Package Version](https://img.shields.io/hexpm/v/glade)](https://hex.pm/packages/glade)
-[![Hex Docs](https://img.shields.io/badge/hex-docs-ffaff3)](https://hexdocs.pm/glade/)
+[![Package Version](https://img.shields.io/hexpm/v/glelm)](https://hex.pm/packages/glelm)
+[![Hex Docs](https://img.shields.io/badge/hex-docs-ffaff3)](https://hexdocs.pm/glelm/)
 
 ```sh
-gleam add glade@1
+gleam add glelm@1
 ```
 ```gleam
-import glade
+import glelm
 
 pub fn main() {
   // TODO: An example of the project in use
 }
 ```
 
-Further documentation can be found at <https://hexdocs.pm/glade>.
+Further documentation can be found at <https://hexdocs.pm/glelm>.
 
 ## Development
 
