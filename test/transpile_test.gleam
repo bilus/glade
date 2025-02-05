@@ -30,7 +30,7 @@ fn run(tc: TestCase) -> Nil {
     |> parser.run(parser.module_parser())
   transpile.module(elm_ast)
   |> result.map(transpile.print)
-  |> should_equal(tc.expected_gleam)
+  |> should_equal(tc.expected_gleam, _, tc.name)
 }
 
 fn load_test_cases() -> Result(List(TestCase), file.FileError) {
@@ -42,6 +42,7 @@ fn load_test_cases() -> Result(List(TestCase), file.FileError) {
     |> list.filter(string.ends_with(_, input_ext))
     |> list.map(string.drop_end(_, string.length(input_ext)))
     |> list.map(fn(test_name) {
+      io.println("Loading test: " <> test_name)
       use input <- result.try(file.read(test_name <> input_ext))
       use expected_gleam <- result.try(file.read(test_name <> expected_ext))
       Ok(TestCase(test_name, input, Ok(expected_gleam)))
@@ -51,13 +52,18 @@ fn load_test_cases() -> Result(List(TestCase), file.FileError) {
   test_cases
 }
 
-fn should_equal(lhs: Result(String, e), rhs: Result(String, e)) {
-  case lhs != rhs, lhs, rhs {
-    True, Ok(lhs), Ok(rhs) -> {
-      gap.compare_strings(rhs, lhs)
+fn should_equal(
+  expected: Result(String, e),
+  actual: Result(String, e),
+  test_name: String,
+) {
+  case actual != expected, actual, expected {
+    True, Ok(actual), Ok(expected) -> {
+      io.println("Test failed: " <> test_name)
+      gap.compare_strings(expected, actual)
       |> gap.to_styled
       |> print_diff
-      should.equal(lhs, rhs)
+      should.equal(actual, expected)
     }
     _, _, _ -> Nil
   }

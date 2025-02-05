@@ -56,13 +56,16 @@ fn variant(constructor: elm.ValueConstructor) -> glance.Variant {
   glance.Variant(
     name,
     arguments
-      |> list.map(fn(ann: elm.TypeAnnotation) {
-        case ann {
-          elm.GenericType(name) ->
-            glance.UnlabelledVariantField(glance.VariableType(name))
-          elm.Unit ->
-            glance.UnlabelledVariantField(glance.NamedType("Nil", None, []))
-        }
-      }),
+      |> list.map(type_annotation)
+      |> list.map(glance.UnlabelledVariantField),
   )
+}
+
+fn type_annotation(ann: elm.TypeAnnotation) -> glance.Type {
+  case ann {
+    elm.GenericType(name) -> glance.VariableType(name)
+    elm.Unit -> glance.NamedType("Nil", None, [])
+    elm.Tupled(annotations) ->
+      glance.TupleType(annotations |> list.map(type_annotation))
+  }
 }
