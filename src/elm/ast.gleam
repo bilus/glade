@@ -51,4 +51,5 @@ pub type TypeAnnotation {
   GenericType(GenericName)
   Unit
   Tupled(List(TypeAnnotation))
+  Typed(TypeName, List(TypeAnnotation))
 }

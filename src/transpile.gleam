@@ -67,5 +67,11 @@ fn type_annotation(ann: elm.TypeAnnotation) -> glance.Type {
     elm.Unit -> glance.NamedType("Nil", None, [])
     elm.Tupled(annotations) ->
       glance.TupleType(annotations |> list.map(type_annotation))
+    elm.Typed(elm.TypeName(type_name), annotations) ->
+      glance.NamedType(
+        type_name,
+        None,
+        annotations |> list.map(type_annotation),
+      )
   }
 }

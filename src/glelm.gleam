@@ -19,7 +19,7 @@ pub fn run() {
     "(a, b)
 "
   use elm_ast <- result.try(
-    parser.run(elm_src, parser.type_annotation_parser())
+    parser.run(elm_src, parser.module())
     |> result.map_error(ParserError),
   )
   io.debug("*** ELM AST")
@@ -42,7 +42,7 @@ pub fn run() {
 }
 
 pub fn main() {
-  print_glance_output()
+  let _ = print_glance_output()
 
   case run() {
     Ok(_) -> io.debug("Success")

@@ -27,7 +27,7 @@ pub fn transpile_test() {
 fn run(tc: TestCase) -> Nil {
   let assert Ok(elm_ast) =
     tc.elm
-    |> parser.run(parser.module_parser())
+    |> parser.run(parser.module())
   transpile.module(elm_ast)
   |> result.map(transpile.print)
   |> should_equal(tc.expected_gleam, _, tc.name)
