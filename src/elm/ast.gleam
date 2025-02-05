@@ -49,4 +49,5 @@ pub type ValueConstructor {
 
 pub type TypeAnnotation {
   GenericType(GenericName)
+  Unit
 }

@@ -2,6 +2,7 @@ import elm/ast as elm
 import glance
 import glance_printer
 import gleam/list
+import gleam/option.{None}
 import gleam/result
 
 pub type Error {
@@ -59,6 +60,8 @@ fn variant(constructor: elm.ValueConstructor) -> glance.Variant {
         case ann {
           elm.GenericType(name) ->
             glance.UnlabelledVariantField(glance.VariableType(name))
+          elm.Unit ->
+            glance.UnlabelledVariantField(glance.NamedType("Nil", None, []))
         }
       }),
   )

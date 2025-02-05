@@ -1,9 +1,11 @@
 import elm/ast
 import elm/lexer
+import gleam/io
 import gleam/option.{None, Some, is_some}
 import gleam/result
 import nibble.{
-  do, guard, lazy, many, optional, return, sequence, take_map, token,
+  do, guard, lazy, many, one_of, optional, replace, sequence, succeed, take_map,
+  token,
 }
 
 pub type Parser(a, ctx) =
@@ -33,12 +35,21 @@ fn generic_name_parser() -> Parser(ast.GenericName, ctx) {
 fn value_constructor_parser() -> Parser(ast.ValueConstructor, ctx) {
   use name <- do(type_name_parser())
   use arguments <- do(many(lazy(type_annotation_parser)))
-  return(ast.ValueConstructor(name, arguments))
+  succeed(ast.ValueConstructor(name, arguments))
 }
 
-fn type_annotation_parser() -> Parser(ast.TypeAnnotation, ctx) {
-  generic_name_parser()
-  |> nibble.map(ast.GenericType)
+pub fn type_annotation_parser() -> Parser(ast.TypeAnnotation, ctx) {
+  one_of([
+    generic_name_parser()
+      |> nibble.map(ast.GenericType),
+    unit_parser() |> replace(ast.Unit),
+  ])
+}
+
+pub fn unit_parser() -> nibble.Parser(Nil, lexer.Token, b) {
+  use _ <- do(token(lexer.LParen))
+  use _ <- do(token(lexer.RParen))
+  succeed(Nil)
 }
 
 pub fn custom_type_parser() -> Parser(ast.Type, ctx) {
@@ -53,12 +64,12 @@ pub fn custom_type_parser() -> Parser(ast.Type, ctx) {
   ))
   use dedent <- do(optional(token(lexer.Dedent)))
   use _ <- do(guard(is_some(indent) == is_some(dedent), "Incorrect indentation"))
-  return(ast.Type(type_name, generics, constructors))
+  succeed(ast.Type(type_name, generics, constructors))
 }
 
 pub fn module_parser() -> Parser(ast.Module, ctx) {
   use custom_type <- do(custom_type_parser())
-  return(ast.Module(declarations: [ast.CustomTypeDeclaration(custom_type)]))
+  succeed(ast.Module(declarations: [ast.CustomTypeDeclaration(custom_type)]))
 }
 
 pub fn run(elm_source: String, parser: Parser(a, ctx)) -> Result(a, Error(ctx)) {
@@ -67,6 +78,7 @@ pub fn run(elm_source: String, parser: Parser(a, ctx)) -> Result(a, Error(ctx)) 
     |> lexer.run(elm_source)
     |> result.map_error(LexerError),
   )
+  io.debug(tokens)
   tokens
   |> nibble.run(parser)
   |> result.map_error(ParserError)
