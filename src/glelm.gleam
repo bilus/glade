@@ -1,6 +1,7 @@
 import elm/lexer
 import elm/parser
 import glance
+import glance_printer
 import gleam/io
 import gleam/result
 import nibble
@@ -14,31 +15,28 @@ pub type RuntimeError(ctx) {
 }
 
 pub fn run() {
-  io.debug("main")
   let elm_src =
-    "type Foo
-  = Foo Unit
-  | Bar Unit
+    "(a, b)
 "
   use elm_ast <- result.try(
-    parser.run(elm_src, parser.module_parser())
+    parser.run(elm_src, parser.type_annotation_parser())
     |> result.map_error(ParserError),
   )
   io.debug("*** ELM AST")
   io.debug(elm_ast)
-  use gleam_ast <- result.try(
-    transpile.module(elm_ast) |> result.map_error(TranspileError),
-  )
-  io.debug("*** GLEAM AST")
-  io.debug(gleam_ast)
-  let gleam_src = transpile.print(gleam_ast)
-  io.debug("*** GLEAM SRC")
-  io.debug(gleam_src)
-  use gleam_ast2 <- result.try(
-    glance.module(gleam_src) |> result.map_error(GlanceError),
-  )
-  io.debug("*** GLEAM AST 2")
-  io.debug(gleam_ast2)
+  // use gleam_ast <- result.try(
+  //   transpile.module(elm_ast) |> result.map_error(TranspileError),
+  // )
+  // io.debug("*** GLEAM AST")
+  // io.debug(gleam_ast)
+  // let gleam_src = transpile.print(gleam_ast)
+  // io.debug("*** GLEAM SRC")
+  // io.debug(gleam_src)
+  // use gleam_ast2 <- result.try(
+  //   glance.module(gleam_src) |> result.map_error(GlanceError),
+  // )
+  // io.debug("*** GLEAM AST 2")
+  // io.debug(gleam_ast2)
 
   Ok("")
 }
@@ -68,12 +66,14 @@ pub fn main() {
 fn print_glance_output() {
   let gleam =
     "
-pub type Foo {
-  Foo(Nil, Nil)
-  Bar(Nil)
+pub type Foo(a, b) {
+  Foo(#(a))
+  Bar(#(a, b))
 }
 "
   use ast <- result.try(glance.module(gleam))
   io.debug(ast)
+  let source = glance_printer.print(ast)
+  io.debug(source)
   Ok(Nil)
 }

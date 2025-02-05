@@ -4,8 +4,8 @@ import gleam/io
 import gleam/option.{None, Some, is_some}
 import gleam/result
 import nibble.{
-  do, guard, lazy, many, one_of, optional, replace, sequence, succeed, take_map,
-  token,
+  backtrackable, do, fail, guard, lazy, many, one_of, optional, replace,
+  sequence, succeed, take_map, token,
 }
 
 pub type Parser(a, ctx) =
@@ -42,7 +42,10 @@ pub fn type_annotation_parser() -> Parser(ast.TypeAnnotation, ctx) {
   one_of([
     generic_name_parser()
       |> nibble.map(ast.GenericType),
-    unit_parser() |> replace(ast.Unit),
+    // TODO: Optimize performance by consuming ( and then
+    // handling either tuple or unit.
+    tupled_parser() |> backtrackable(),
+    unit_parser() |> replace(ast.Unit) |> backtrackable(),
   ])
 }
 
@@ -50,6 +53,19 @@ pub fn unit_parser() -> nibble.Parser(Nil, lexer.Token, b) {
   use _ <- do(token(lexer.LParen))
   use _ <- do(token(lexer.RParen))
   succeed(Nil)
+}
+
+pub fn tupled_parser() -> nibble.Parser(ast.TypeAnnotation, lexer.Token, ctx) {
+  use _ <- do(token(lexer.LParen))
+  use type_annotations <- do(sequence(
+    type_annotation_parser(),
+    token(lexer.Comma),
+  ))
+  use _ <- do(token(lexer.RParen))
+  case type_annotations {
+    [] -> fail("Not a tuple")
+    _ -> succeed(ast.Tupled(type_annotations))
+  }
 }
 
 pub fn custom_type_parser() -> Parser(ast.Type, ctx) {
@@ -62,6 +78,8 @@ pub fn custom_type_parser() -> Parser(ast.Type, ctx) {
     lazy(value_constructor_parser),
     token(lexer.VerticalBar),
   ))
+  io.debug("** CONSTRUCTORS **")
+  io.debug(constructors)
   use dedent <- do(optional(token(lexer.Dedent)))
   use _ <- do(guard(is_some(indent) == is_some(dedent), "Incorrect indentation"))
   succeed(ast.Type(type_name, generics, constructors))
