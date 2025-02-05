@@ -1,9 +1,9 @@
-name = "glade"
+name = "glelm"
 version = "0.1.0"
 
 description = "Elm parser written in Gleam"
 licences = ["MIT"]
-repository = { type = "github", user = "bilus", repo = "glade" }
+repository = { type = "github", user = "bilus", repo = "glelm" }
 # links = [{ title = "Website", href = "" }]
 #
 # For a full reference of all the available options, you can have a look at
