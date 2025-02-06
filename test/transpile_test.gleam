@@ -35,8 +35,8 @@ fn run(tc: TestCase) -> Nil {
 
 fn load_test_cases() -> Result(List(TestCase), file.FileError) {
   use files <- result.try(file.get_files("./test/transpile"))
-  let input_ext = ".elm"
-  let expected_ext = ".expected"
+  let input_ext = ".elm.input"
+  let expected_ext = ".gleam.expected"
   let test_cases =
     files
     |> list.filter(string.ends_with(_, input_ext))
@@ -73,8 +73,8 @@ fn print_diff(diff: StyledComparison) {
   io.println("")
   io.println("")
   io.println("-------------- Actual ---------------")
-  io.println(diff.first)
-  io.println("------------- Expected --------------")
   io.println(diff.second)
+  io.println("------------- Expected --------------")
+  io.println(diff.first)
   io.println("-------------------------------------")
 }

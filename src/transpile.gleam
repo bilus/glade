@@ -26,6 +26,9 @@ pub fn module(elm_ast: elm.Module) -> Result(glance.Module, Error) {
 }
 
 pub fn print(module: glance.Module) -> String {
+  // It seems to reverse the order when outputting Gleam source code.
+  let module =
+    glance.Module(..module, custom_types: module.custom_types |> list.reverse)
   glance_printer.print(module)
 }
 

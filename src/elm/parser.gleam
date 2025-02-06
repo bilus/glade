@@ -1,11 +1,10 @@
 import elm/ast
 import elm/lexer
-import gleam/io
-import gleam/option.{None, Some, is_some}
+import gleam/option.{None, Some}
 import gleam/result
 import nibble.{
-  backtrackable, do, fail, guard, lazy, many, many1, one_of, optional, replace,
-  sequence, succeed, take_map, token,
+  backtrackable, do, fail, lazy, many, many1, one_of, replace, sequence, succeed,
+  take_map, token,
 }
 
 pub type Parser(a, ctx) =
@@ -94,24 +93,34 @@ fn typed_annotation_no_arguments() -> nibble.Parser(
 
 fn custom_type() -> Parser(ast.Type, ctx) {
   use _ <- do(token(lexer.TypeKeyword))
+  use _ <- do(layout_start())
   use type_name <- do(type_name())
   use generics <- do(many(generic_name()))
-  use indent <- do(optional(token(lexer.Indent)))
   use _ <- do(token(lexer.Eq))
   use constructors <- do(sequence(
     lazy(value_constructor),
     token(lexer.VerticalBar),
   ))
-  io.debug("** CONSTRUCTORS **")
-  io.debug(constructors)
-  use dedent <- do(optional(token(lexer.Dedent)))
-  use _ <- do(guard(is_some(indent) == is_some(dedent), "Incorrect indentation"))
+  use _ <- do(layout_end())
   succeed(ast.Type(type_name, generics, constructors))
 }
 
+fn layout_start() {
+  token(lexer.LayoutStart)
+}
+
+fn layout_end() {
+  token(lexer.LayoutEnd)
+}
+
 pub fn module() -> Parser(ast.Module, ctx) {
-  use custom_type <- do(custom_type())
-  succeed(ast.Module(declarations: [ast.CustomTypeDeclaration(custom_type)]))
+  use custom_types <- do(many(custom_type_declaration()))
+  succeed(ast.Module(declarations: custom_types))
+}
+
+fn custom_type_declaration() -> nibble.Parser(ast.Declaration, lexer.Token, ctx) {
+  custom_type()
+  |> nibble.map(ast.CustomTypeDeclaration)
 }
 
 pub fn run(elm_source: String, parser: Parser(a, ctx)) -> Result(a, Error(ctx)) {
@@ -120,7 +129,6 @@ pub fn run(elm_source: String, parser: Parser(a, ctx)) -> Result(a, Error(ctx)) 
     |> lexer.run(elm_source)
     |> result.map_error(LexerError),
   )
-  io.debug(tokens)
   tokens
   |> nibble.run(parser)
   |> result.map_error(ParserError)
