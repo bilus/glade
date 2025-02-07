@@ -1,8 +1,8 @@
+import debug
 import elm/lexer
 import elm/parser
 import glance
 import glance_printer
-import gleam/io
 import gleam/result
 import nibble
 import transpile
@@ -16,27 +16,32 @@ pub type RuntimeError(ctx) {
 
 pub fn run() {
   let elm_src =
-    "(a, b)
+    "
+type Maybe a
+  = Just a
+  | Nothing
+
+type Maybe2 a = Just2 a | Nothing2
 "
   use elm_ast <- result.try(
     parser.run(elm_src, parser.module())
     |> result.map_error(ParserError),
   )
-  io.debug("*** ELM AST")
-  io.debug(elm_ast)
-  // use gleam_ast <- result.try(
-  //   transpile.module(elm_ast) |> result.map_error(TranspileError),
-  // )
-  // io.debug("*** GLEAM AST")
-  // io.debug(gleam_ast)
-  // let gleam_src = transpile.print(gleam_ast)
-  // io.debug("*** GLEAM SRC")
-  // io.debug(gleam_src)
-  // use gleam_ast2 <- result.try(
-  //   glance.module(gleam_src) |> result.map_error(GlanceError),
-  // )
-  // io.debug("*** GLEAM AST 2")
-  // io.debug(gleam_ast2)
+  debug.log("*** ELM AST")
+  debug.log(elm_ast)
+  use gleam_ast <- result.try(
+    transpile.module(elm_ast) |> result.map_error(TranspileError),
+  )
+  debug.log("*** GLEAM AST")
+  debug.log(gleam_ast)
+  let gleam_src = transpile.print(gleam_ast)
+  debug.log("*** GLEAM SRC")
+  debug.log(gleam_src)
+  use gleam_ast2 <- result.try(
+    glance.module(gleam_src) |> result.map_error(GlanceError),
+  )
+  debug.log("*** GLEAM AST 2")
+  debug.log(gleam_ast2)
 
   Ok("")
 }
@@ -45,21 +50,21 @@ pub fn main() {
   let _ = print_glance_output()
 
   case run() {
-    Ok(_) -> io.debug("Success")
-    Error(TranspileError(_)) -> io.debug("Transpile error")
+    Ok(_) -> debug.log("Success")
+    Error(TranspileError(_)) -> debug.log("Transpile error")
     Error(ParserError(parser.LexerError(_))) -> {
-      io.debug("Lexer error")
-      // io.debug(e)
+      debug.log("Lexer error")
+      // debug.log(e)
     }
     Error(ParserError(parser.ParserError([dead_end, ..]))) -> {
-      io.debug("Parser error")
+      debug.log("Parser error")
       let de: nibble.DeadEnd(lexer.Token, Nil) = dead_end
-      io.debug(de)
-      io.debug("")
+      debug.log(de)
+      debug.log("")
     }
-    Error(GlanceError(_)) -> io.debug("Glance error")
-    Error(InternalError(msg)) -> io.debug("Internal error: " <> msg)
-    _ -> io.debug("Unknown error")
+    Error(GlanceError(_)) -> debug.log("Glance error")
+    Error(InternalError(msg)) -> debug.log("Internal error: " <> msg)
+    _ -> debug.log("Unknown error")
   }
 }
 
@@ -72,8 +77,8 @@ pub type Foo(a, b) {
 }
 "
   use ast <- result.try(glance.module(gleam))
-  io.debug(ast)
+  debug.log(ast)
   let source = glance_printer.print(ast)
-  io.debug(source)
+  debug.log(source)
   Ok(Nil)
 }

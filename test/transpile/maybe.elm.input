@@ -1,0 +1,9 @@
+type Maybe a
+  = Just a
+  | Nothing
+
+type Maybe2 a = Just2 a | Nothing2
+
+
+type Maybe3 a = Just3 a
+             | Nothing3
