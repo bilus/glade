@@ -1,9 +1,10 @@
+import debug
 import elm/ast
 import elm/lexer
 import gleam/option.{None, Some}
 import gleam/result
 import nibble.{
-  backtrackable, do, fail, lazy, many, many1, one_of, replace, sequence, succeed,
+  backtrackable, do, eof, fail, lazy, many, one_of, replace, sequence, succeed,
   take_map, token,
 }
 
@@ -16,38 +17,118 @@ pub type Error(ctx) {
 }
 
 fn type_name() -> Parser(ast.TypeName, ctx) {
-  use name <- take_map("Expected type name")
-  case name {
-    lexer.TypeName(name) -> Some(ast.TypeName(name))
-    _ -> None
+  {
+    use name <- take_map("Expected type name")
+    case name {
+      lexer.TypeName(name) -> Some(ast.TypeName(name))
+      _ -> None
+    }
   }
+  |> inspect("DONE: type_name")
 }
 
-fn generic_name() -> Parser(ast.GenericName, ctx) {
-  use name <- take_map("Expected a generic type")
-  case name {
-    lexer.GenericTypeName(name) -> Some(name)
-    _ -> None
+fn generic_type_annotation() -> Parser(ast.GenericName, ctx) {
+  {
+    use name <- take_map("Expected a generic type")
+    case name {
+      lexer.Identifier(name) -> Some(name)
+      _ -> None
+    }
   }
+  |> inspect("DONE: generic_type_annotation")
 }
 
 fn value_constructor() -> Parser(ast.ValueConstructor, ctx) {
   use name <- do(type_name())
-  use arguments <- do(many(lazy(type_annotation)))
+  use arguments <- do(many(
+    lazy(type_annotation_term) |> inspect("type_annotation_term"),
+  ))
   succeed(ast.ValueConstructor(name, arguments))
+  |> inspect("DONE: value_constructor")
 }
 
 fn type_annotation() -> Parser(ast.TypeAnnotation, ctx) {
   one_of([
-    generic_name()
-      |> nibble.map(ast.GenericType),
+    typed_annotation() |> backtrackable() |> inspect("typed_annotation"),
+    type_annotation_term()
+      |> backtrackable()
+      |> inspect("type_annotation_term"),
+  ])
+}
+
+fn parens_type_annotation() -> nibble.Parser(
+  ast.TypeAnnotation,
+  lexer.Token,
+  ctx,
+) {
+  use _ <- do(token(lexer.LParen))
+  use type_annotation <- do(type_annotation() |> inspect("type_annotation"))
+  use _ <- do(token(lexer.RParen))
+  succeed(type_annotation) |> inspect("DONE: parens_type_annotation")
+}
+
+fn type_annotation_term() -> Parser(ast.TypeAnnotation, ctx) {
+  one_of([
+    generic_type_annotation()
+      |> nibble.map(ast.GenericType)
+      |> inspect("generic_name"),
+    typed_annotation_no_arguments()
+      |> inspect("typed_annotation_no_arguments"),
     // TODO: Optimize performance by consuming ( and then
     // handling either tuple or unit.
-    tupled_type_annotation() |> backtrackable(),
-    unit() |> replace(ast.Unit) |> backtrackable(),
-    typed_annotation_with_arguments(),
-    typed_annotation_no_arguments(),
+    tupled_type_annotation()
+      |> backtrackable()
+      |> inspect("tupled_type_annotation"),
+    unit() |> replace(ast.Unit) |> backtrackable() |> inspect("unit"),
+    parens_type_annotation()
+      |> backtrackable()
+      |> inspect("parens_type_annotation"),
+    record_type_annotation()
+      |> backtrackable()
+      |> inspect("record_type_annotation"),
   ])
+}
+
+fn typed_annotation_no_arguments() -> nibble.Parser(
+  ast.TypeAnnotation,
+  lexer.Token,
+  ctx,
+) {
+  use type_name <- do(type_name())
+  succeed(ast.Typed(type_name, []))
+  |> inspect("DONE: typed_annotation_no_arguments")
+}
+
+pub fn record_type_annotation() -> nibble.Parser(
+  ast.TypeAnnotation,
+  lexer.Token,
+  ctx,
+) {
+  use _ <- do(token(lexer.LBrace))
+
+  use fields <- do(sequence(record_field(), token(lexer.Comma)))
+
+  use _ <- do(token(lexer.RBrace))
+
+  succeed(ast.Record(ast.RecordDefinition(fields)))
+  |> inspect("DONE: record_type_annotation")
+}
+
+fn record_field() -> nibble.Parser(ast.RecordField, lexer.Token, ctx) {
+  use name <- do(record_field_name())
+  use _ <- do(token(lexer.Colon))
+  use type_annotation <- do(inspect(type_annotation(), "type_annotation"))
+  debug.log(type_annotation)
+  succeed(ast.RecordField(name, type_annotation))
+  |> inspect("DONE: record_field")
+}
+
+fn record_field_name() -> nibble.Parser(ast.RecordFieldName, lexer.Token, ctx) {
+  use name <- take_map("Expected record field name")
+  case name {
+    lexer.Identifier(name) -> Some(name)
+    _ -> None
+  }
 }
 
 fn unit() -> nibble.Parser(Nil, lexer.Token, b) {
@@ -66,36 +147,27 @@ fn tupled_type_annotation() -> nibble.Parser(
   use _ <- do(token(lexer.RParen))
   case type_annotations {
     [] -> fail("Not a tuple")
-    _ -> succeed(ast.Tupled(type_annotations))
+    [_] -> fail("Not a tuple")
+    _ ->
+      succeed(ast.Tupled(type_annotations))
+      |> inspect("DONE: tupled_type_annotation")
   }
 }
 
-fn typed_annotation_with_arguments() -> nibble.Parser(
-  ast.TypeAnnotation,
-  lexer.Token,
-  ctx,
-) {
-  use _ <- do(token(lexer.LParen))
+fn typed_annotation() -> nibble.Parser(ast.TypeAnnotation, lexer.Token, ctx) {
   use type_name <- do(type_name())
-  use type_annotations <- do(many1(type_annotation()))
-  use _ <- do(token(lexer.RParen))
+  use type_annotations <- do(many(
+    type_annotation_term() |> inspect("type_annotation_term"),
+  ))
   succeed(ast.Typed(type_name, type_annotations))
-}
-
-fn typed_annotation_no_arguments() -> nibble.Parser(
-  ast.TypeAnnotation,
-  lexer.Token,
-  ctx,
-) {
-  use type_name <- do(type_name())
-  succeed(ast.Typed(type_name, []))
+  |> inspect("DONE: typed_annotation")
 }
 
 fn custom_type() -> Parser(ast.Type, ctx) {
   use _ <- do(token(lexer.TypeKeyword))
   use _ <- do(layout_start())
   use type_name <- do(type_name())
-  use generics <- do(many(generic_name()))
+  use generics <- do(many(generic_type_annotation()))
   use _ <- do(token(lexer.Eq))
   use constructors <- do(sequence(
     lazy(value_constructor),
@@ -103,6 +175,7 @@ fn custom_type() -> Parser(ast.Type, ctx) {
   ))
   use _ <- do(layout_end())
   succeed(ast.Type(type_name, generics, constructors))
+  |> inspect("DONE: custom_type")
 }
 
 fn layout_start() {
@@ -115,7 +188,10 @@ fn layout_end() {
 
 pub fn module() -> Parser(ast.Module, ctx) {
   use custom_types <- do(many(custom_type_declaration()))
-  succeed(ast.Module(declarations: custom_types))
+  do(eof(), fn(_) {
+    succeed(ast.Module(declarations: custom_types))
+    |> inspect("DONE: module")
+  })
 }
 
 fn custom_type_declaration() -> nibble.Parser(ast.Declaration, lexer.Token, ctx) {
@@ -132,4 +208,15 @@ pub fn run(elm_source: String, parser: Parser(a, ctx)) -> Result(a, Error(ctx)) 
   tokens
   |> nibble.run(parser)
   |> result.map_error(ParserError)
+}
+
+pub fn inspect(parser: Parser(a, ctx), msg: String) -> Parser(a, ctx) {
+  case debug.enabled() {
+    True -> {
+      // debug.log("* Inspecting Parser")
+      let parser = nibble.inspect(parser, msg)
+      parser
+    }
+    False -> parser
+  }
 }

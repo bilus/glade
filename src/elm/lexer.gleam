@@ -15,7 +15,6 @@ pub type Token {
   TypeKeyword
   UnitKeyword
   TypeName(String)
-  GenericTypeName(String)
   VerticalBar
   Eq
   LParen
@@ -103,6 +102,7 @@ pub type Token {
   Dot
   /// ..
   DoubleDot
+  Colon
 
   //-----------------------------------
   // Layout tokens (for our processor)
@@ -184,10 +184,11 @@ pub fn new() -> Lexer {
       lexer.token("]", RBracket),
       lexer.token("{", LBrace),
       lexer.token("}", RBrace),
+      lexer.token(":", Colon),
       lexer.token(",", Comma),
       // Identifiers and literals
       lexer.identifier("[A-Z]", "[A-Za-z0-9_]", set.new(), TypeName),
-      lexer.identifier("[a-z]", "[A-Za-z0-9_]", set.new(), GenericTypeName),
+      lexer.identifier("[a-z]", "[A-Za-z0-9_]", set.new(), Identifier),
       // Number literals (both integer and float)
       lexer.number(IntLiteral, FloatLiteral),
       // TODO: Properly handle string, esp. multi-line strings.
@@ -231,7 +232,7 @@ fn indentation_to_layout(
     tokens
     |> flat_map_fold(None, fn(ctx, token) {
       let lexer.Token(_, _, value) = token
-      debug.log("TOKEN: " <> string.inspect(value))
+      debug.log("TOKEN: " <> string.inspect(token))
       let updated_context = update_layout_context(ctx, token)
       case value, is_layout_end(updated_context, ctx) {
         TypeKeyword, True -> #(Some(updated_context), [
