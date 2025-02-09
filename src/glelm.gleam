@@ -2,7 +2,7 @@ import debug
 import elm/lexer
 import elm/parser
 import glance
-import glance_printer
+import gleam/io
 import gleam/result
 import nibble
 import transpile
@@ -17,12 +17,13 @@ pub type RuntimeError(ctx) {
 pub fn run() {
   let elm_src =
     "
-type Maybe a
-  = Just a
-  | Nothing
-
-type Maybe2 a = Just2 a | Nothing2
+type FooBar a
+    = Bar (Result String a)
+    | Baz (Int, Int)
+    | Qux { str: String, int: a }
 "
+  io.print(elm_src)
+  io.println("")
   use elm_ast <- result.try(
     parser.run(elm_src, parser.module())
     |> result.map_error(ParserError),
@@ -36,7 +37,7 @@ type Maybe2 a = Just2 a | Nothing2
   debug.log(gleam_ast)
   let gleam_src = transpile.print(gleam_ast)
   debug.log("*** GLEAM SRC")
-  debug.log(gleam_src)
+  io.print(gleam_src)
   use gleam_ast2 <- result.try(
     glance.module(gleam_src) |> result.map_error(GlanceError),
   )
@@ -47,7 +48,7 @@ type Maybe2 a = Just2 a | Nothing2
 }
 
 pub fn main() {
-  let _ = print_glance_output()
+  // let _ = print_glance_output()
 
   case run() {
     Ok(_) -> debug.log("Success")
@@ -67,18 +68,76 @@ pub fn main() {
     _ -> debug.log("Unknown error")
   }
 }
+// fn print_glance_output() {
+//   let gleam =
+//     "
+// pub type Foo(a) {
+//   Foo(field: String, bar: a)
+//   Baz(String)
+// }
+// "
+//   use ast <- result.try(glance.module(gleam))
+//   io.debug(ast)
+//   let source = glance_printer.print(ast)
+//   io.print(source)
+//   Ok(Nil)
+// }
+// fn calculator() {
+//   use ast <- result.try(
+//     lexer.new()
+//     |> lexer.run("1 * 2 + 3")
+//     |> result.map(nibble.run(_, expression())),
+//   )
+//   Ok(ast)
+// }
 
-fn print_glance_output() {
-  let gleam =
-    "
-pub type Foo(a, b) {
-  Foo(#(a))
-  Bar(#(a, b))
-}
-"
-  use ast <- result.try(glance.module(gleam))
-  debug.log(ast)
-  let source = glance_printer.print(ast)
-  debug.log(source)
-  Ok(Nil)
-}
+// type Expression {
+//   Addition(Expression, Expression)
+//   Multiplication(Expression, Expression)
+//   Number(Float)
+// }
+
+// fn term() {
+//   nibble.one_of([number(), sum()])
+// }
+
+// fn sum() {
+//   use lhs <- nibble.do(expression())
+//   use _ <- nibble.do(nibble.token(lexer.Plus))
+//   use rhs <- nibble.do(expression())
+//   nibble.succeed(Addition(lhs, rhs))
+// }
+
+// fn number() {
+//   nibble.take_map("Expected float or int literal", fn(tok) {
+//     case tok {
+//       lexer.FloatLiteral(f) -> Some(Number(f))
+//       lexer.IntLiteral(i) -> Some(Number(int.to_float(i)))
+//       _ -> None
+//     }
+//   })
+// }
+
+// fn expression() {
+//   nibble.one_of([sub_expression(), number()])
+// }
+
+// fn sub_expression() {
+//   use num <- nibble.do(number())
+//   use expr <- nibble.do({
+//     use op <- nibble.take_map("Expected operator")
+//     case op {
+//       lexer.Plus -> Some(Addition)
+//       lexer.Multiply -> Some(Multiplication)
+//       _ -> None
+//     }
+//   })
+//   use rhs <- nibble.do(expression())
+//   nibble.succeed(expr(num, rhs))
+// }
+
+// pub fn main() {
+//   use ast <- result.try(calculator())
+//   io.debug(ast)
+//   Ok("")
+// }

@@ -52,4 +52,16 @@ pub type TypeAnnotation {
   Unit
   Tupled(List(TypeAnnotation))
   Typed(TypeName, List(TypeAnnotation))
+  Record(RecordDefinition)
+}
+
+pub type RecordDefinition {
+  RecordDefinition(fields: List(RecordField))
+}
+
+pub type RecordFieldName =
+  String
+
+pub type RecordField {
+  RecordField(name: RecordFieldName, type_: TypeAnnotation)
 }

@@ -56,11 +56,30 @@ pub fn custom_type(
 
 fn variant(constructor: elm.ValueConstructor) -> glance.Variant {
   let elm.ValueConstructor(elm.TypeName(name), arguments) = constructor
+  case arguments {
+    [elm.Record(elm.RecordDefinition(fields))] -> record(name, fields)
+    _ ->
+      glance.Variant(
+        name,
+        arguments
+          |> list.map(type_annotation)
+          |> list.map(glance.UnlabelledVariantField),
+      )
+  }
+}
+
+fn record(name: String, fields: List(elm.RecordField)) -> glance.Variant {
   glance.Variant(
     name,
-    arguments
-      |> list.map(type_annotation)
-      |> list.map(glance.UnlabelledVariantField),
+    fields
+      |> list.map(record_field),
+  )
+}
+
+fn record_field(record_field: elm.RecordField) -> glance.VariantField {
+  glance.LabelledVariantField(
+    type_annotation(record_field.type_),
+    record_field.name,
   )
 }
 
@@ -76,5 +95,7 @@ fn type_annotation(ann: elm.TypeAnnotation) -> glance.Type {
         None,
         annotations |> list.map(type_annotation),
       )
+    elm.Record(_record_definition) ->
+      panic as "Multiple record type annotations are not supported"
   }
 }

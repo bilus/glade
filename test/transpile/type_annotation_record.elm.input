@@ -1,0 +1,4 @@
+type Foo a
+  = Bar { field1: String,
+          field2: (Int, String),
+          field3: Maybe a }

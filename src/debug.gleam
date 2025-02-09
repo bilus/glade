@@ -8,3 +8,7 @@ pub fn log(x: a) -> a {
     False -> x
   }
 }
+
+pub fn enabled() -> Bool {
+  is_enabled
+}
