@@ -1,3 +1,5 @@
+module TypeAnnotationRecord
+
 type Foo a
   = Bar { field1: String,
           field2: (Int, String),

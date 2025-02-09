@@ -1,5 +1,5 @@
 pub type Module {
-  Module(declarations: List(Declaration))
+  Module(name: String, declarations: List(Declaration))
 }
 
 pub type Declaration {

@@ -1,1 +1,3 @@
+module FunctionTypeAnnotation
+
 type Fun a = Fun ((Maybe a) -> Int -> Int -> (Maybe a))

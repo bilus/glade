@@ -1,10 +1,7 @@
-import debug
 import gleam/list
-import gleam/option.{type Option, None, Some}
 import gleam/pair
 import gleam/result
 import gleam/set
-import gleam/string
 import nibble/lexer
 
 pub type Token {
@@ -14,7 +11,7 @@ pub type Token {
   //-----------------------------------
   TypeKeyword
   UnitKeyword
-  TypeName(String)
+  UpcaseIdentifier(String)
   VerticalBar
   Eq
   LParen
@@ -187,7 +184,7 @@ pub fn new() -> Lexer {
       lexer.token(":", Colon),
       lexer.token(",", Comma),
       // Identifiers and literals
-      lexer.identifier("[A-Z]", "[A-Za-z0-9_]", set.new(), TypeName),
+      lexer.identifier("[A-Z]", "[A-Za-z0-9_]", set.new(), UpcaseIdentifier),
       lexer.identifier("[a-z]", "[A-Za-z0-9_]", set.new(), Identifier),
       // Number literals (both integer and float)
       lexer.number(IntLiteral, FloatLiteral),
@@ -210,8 +207,8 @@ pub fn run(lx: Lexer, source: String) -> Result(List(lexer.Token(Token)), Error)
   |> result.map(indentation_to_layout)
 }
 
-type LayoutContext {
-  LayoutContext(col: Int, row: Int)
+type LayoutBlock {
+  LayoutBlock(col: Int, row: Int)
 }
 
 fn flat_map_fold(
@@ -230,25 +227,22 @@ fn indentation_to_layout(
 ) -> List(lexer.Token(Token)) {
   let updated_tokens =
     tokens
-    |> flat_map_fold(None, fn(ctx, token) {
-      let lexer.Token(_, _, value) = token
-      debug.log("TOKEN: " <> string.inspect(token))
-      let updated_context = update_layout_context(ctx, token)
-      case value, is_layout_end(updated_context, ctx) {
-        TypeKeyword, True -> #(Some(updated_context), [
+    |> flat_map_fold([], fn(layouts, token) {
+      case is_layout_end(layouts, token), is_layout_start(token) {
+        True, True -> #(layouts |> pop_layout |> push_layout(token), [
           layout_token(LayoutEnd, after: token),
           token,
           layout_token(LayoutStart, after: token),
         ])
-        TypeKeyword, False -> #(Some(updated_context), [
+        False, True -> #(layouts |> push_layout(token), [
           token,
           layout_token(LayoutStart, after: token),
         ])
-        _, True -> #(Some(updated_context), [
+        True, False -> #(layouts |> pop_layout, [
           token,
           layout_token(LayoutEnd, after: token),
         ])
-        _, False -> #(Some(updated_context), [token])
+        False, False -> #(layouts, [token])
       }
     })
   case list.last(updated_tokens) {
@@ -259,23 +253,35 @@ fn indentation_to_layout(
   }
 }
 
-fn update_layout_context(
-  _: Option(LayoutContext),
-  token: lexer.Token(a),
-) -> LayoutContext {
-  let lexer.Token(span, _, _) = token
-  LayoutContext(col: span.col_start, row: span.row_start)
+fn is_layout_start(token: lexer.Token(Token)) -> Bool {
+  let lexer.Token(span: _, lexeme: _, value: value) = token
+  case value {
+    TypeKeyword | ModuleKeyword -> True
+    _ -> False
+  }
 }
 
-fn is_layout_end(ctx: LayoutContext, prev_ctx: Option(LayoutContext)) -> Bool {
-  debug.log(string.inspect(ctx) <> " <---- " <> string.inspect(prev_ctx))
-  // TODO: This is a hack. What we should do, long term is keep a stack
-  // of layout context for every layout keyword we encounter
-  // and track indentation relative to the column of the layout keyword.
-  case prev_ctx {
-    Some(prev_ctx) -> ctx.row > prev_ctx.row && ctx.col == 1
-    None -> False
+fn is_layout_end(layouts: List(LayoutBlock), token: lexer.Token(Token)) -> Bool {
+  case layouts {
+    [] -> False
+    [recent, ..] -> {
+      let lexer.Token(span: span, lexeme: _, value: _) = token
+      span.row_start > recent.row && span.col_start == 1
+    }
   }
+}
+
+fn pop_layout(layouts: List(LayoutBlock)) -> List(LayoutBlock) {
+  layouts |> list.drop(1)
+}
+
+fn push_layout(
+  layouts: List(LayoutBlock),
+  token: lexer.Token(Token),
+) -> List(LayoutBlock) {
+  let lexer.Token(span: span, lexeme: _, value: _) = token
+  let layout = LayoutBlock(col: span.col_start, row: span.row_start)
+  layouts |> list.prepend(layout)
 }
 
 /// Construct a layout token after the given token. For example to mark the
