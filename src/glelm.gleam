@@ -16,20 +16,12 @@ pub type RuntimeError(ctx) {
 
 pub fn run() -> Result(String, RuntimeError(a)) {
   let elm_src =
-    "module Foo
+    "module Comments
 
-type RelativePosition
-    = OnRight
-    | OnLeft
-    | Above
-    | Below
-    | InFront
-
-
-type Layout
-    = GridElement
-    | Row
-    | Column
+-- Comment
+type A {-Foo--}= {-
+  Comment
+-} A Int--Comment
 "
   io.println(elm_src)
   use elm_ast <- result.try(

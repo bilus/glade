@@ -125,20 +125,3 @@ main : Program () Model Msg
 main =
     Browser.sandbox
         { init = init, update = update, view = view }
-
-
-type A
-    = A (Maybe { a : Int })
-
-
-foo : { a : Int } -> ()
-foo x =
-    ()
-
-
-bar =
-    let
-        a =
-            A (Just { a = 10 })
-    in
-    foo a

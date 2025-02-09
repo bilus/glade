@@ -2,6 +2,7 @@ import gleam/list
 import gleam/pair
 import gleam/result
 import gleam/set
+import gleam/string
 import nibble/lexer
 
 pub type Token {
@@ -17,6 +18,7 @@ pub type Token {
   LParen
   RParen
   Comma
+  Comment(String)
 
   //-----------------------------------
   // Layout keywords
@@ -112,12 +114,12 @@ pub type Token {
   LayoutSemicolon
 }
 
-type LexerMode {
-  LexerMode(indent: Int)
+type LexerState {
+  LexerState
 }
 
 pub opaque type Lexer {
-  Lexer(impl: lexer.Lexer(Token, LexerMode))
+  Lexer(impl: lexer.Lexer(Token, LexerState))
 }
 
 pub type Error =
@@ -126,8 +128,9 @@ pub type Error =
 pub fn new() -> Lexer {
   lexer.advanced(fn(_) {
     [
-      // // Indentation handling
-      // indentation(),
+      // Comment handling
+      multi_line_comment() |> lexer.ignore,
+      single_line_comment() |> lexer.ignore,
       // Layout keywords
       lexer.keyword("let", "\\s+", LetKeyword),
       lexer.keyword("in", "\\s+", InKeyword),
@@ -203,8 +206,45 @@ pub fn new() -> Lexer {
 
 pub fn run(lx: Lexer, source: String) -> Result(List(lexer.Token(Token)), Error) {
   source
-  |> lexer.run_advanced(LexerMode(0), lx.impl)
+  |> lexer.run_advanced(LexerState, lx.impl)
   |> result.map(indentation_to_layout)
+}
+
+pub fn single_line_comment() -> lexer.Matcher(Token, mode) {
+  let start = "--"
+  use mode, lexeme, lookahead <- lexer.custom()
+
+  case string.starts_with(lexeme, start), lookahead {
+    True, "\n" ->
+      lexeme
+      |> string.drop_start(string.length(start))
+      |> Comment
+      |> lexer.Keep(mode)
+    True, _ -> lexer.Skip
+    False, _ -> lexer.NoMatch
+  }
+}
+
+pub fn multi_line_comment() -> lexer.Matcher(Token, mode) {
+  let start = "{-"
+  let end = "-}"
+  use mode, lexeme, lookahead <- lexer.custom()
+
+  case
+    string.starts_with(lexeme, start),
+    string.ends_with(lexeme, end),
+    lexeme <> lookahead
+  {
+    True, True, _ ->
+      lexeme
+      |> string.drop_start(string.length(start))
+      |> string.drop_end(string.length(end))
+      |> Comment
+      |> lexer.Keep(mode)
+    True, _, _ -> lexer.Skip
+    _, _, "{-" -> lexer.Skip
+    False, _, _ -> lexer.NoMatch
+  }
 }
 
 type LayoutBlock {
