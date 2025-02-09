@@ -1,6 +1,7 @@
 import debug
 import elm/ast
 import elm/lexer
+import gleam/list
 import gleam/option.{None, Some}
 import gleam/result
 import nibble.{
@@ -20,7 +21,7 @@ fn type_name() -> Parser(ast.TypeName, ctx) {
   {
     use name <- take_map("Expected type name")
     case name {
-      lexer.TypeName(name) -> Some(ast.TypeName(name))
+      lexer.UpcaseIdentifier(name) -> Some(ast.TypeName(name))
       _ -> None
     }
   }
@@ -213,11 +214,23 @@ fn layout_end() {
 }
 
 pub fn module() -> Parser(ast.Module, ctx) {
-  use custom_types <- do(many(custom_type_declaration()))
-  do(eof(), fn(_) {
-    succeed(ast.Module(declarations: custom_types))
-    |> inspect("DONE: module")
-  })
+  use _ <- do(token(lexer.ModuleKeyword) |> inspect("module_keyword"))
+  use _ <- do(layout_start())
+  use name <- do(module_name() |> inspect("module_name"))
+  use _ <- do(layout_end())
+  use custom_types <- do(many(
+    custom_type_declaration() |> inspect("custom_type_declaration"),
+  ))
+  use _ <- do(eof())
+  succeed(ast.Module(name, declarations: custom_types))
+}
+
+fn module_name() -> nibble.Parser(String, lexer.Token, ctx) {
+  use tok <- take_map("Expected module name")
+  case tok {
+    lexer.UpcaseIdentifier(name) -> Some(name)
+    _ -> None
+  }
 }
 
 fn custom_type_declaration() -> nibble.Parser(ast.Declaration, lexer.Token, ctx) {
@@ -231,6 +244,9 @@ pub fn run(elm_source: String, parser: Parser(a, ctx)) -> Result(a, Error(ctx)) 
     |> lexer.run(elm_source)
     |> result.map_error(LexerError),
   )
+  debug.log("*** TOKENS ***")
+  tokens
+  |> list.each(debug.log)
   tokens
   |> nibble.run(parser)
   |> result.map_error(ParserError)

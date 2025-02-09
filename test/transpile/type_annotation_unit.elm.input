@@ -1,3 +1,5 @@
+module TypeAnnotationUnit
+
 type Foo
     = Foo () ()
     | Bar ()

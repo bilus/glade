@@ -16,11 +16,22 @@ pub type RuntimeError(ctx) {
 
 pub fn run() -> Result(String, RuntimeError(a)) {
   let elm_src =
-    "
-type Fun a = Fun (T1 -> T2 -> T3)
+    "module Foo
+
+type RelativePosition
+    = OnRight
+    | OnLeft
+    | Above
+    | Below
+    | InFront
+
+
+type Layout
+    = GridElement
+    | Row
+    | Column
 "
   io.println(elm_src)
-  io.println("*** PARSING")
   use elm_ast <- result.try(
     parser.run(elm_src, parser.module())
     |> result.map_error(ParserError),
