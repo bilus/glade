@@ -101,7 +101,33 @@ fn type_annotation(ann: elm.TypeAnnotation) -> glance.Type {
         None,
         annotations |> list.map(type_annotation),
       )
+    elm.FunctionType(lhs, rhs) -> {
+      case flatten_function_type_annotation(rhs) |> list.reverse {
+        [] -> glance.FunctionType([], type_annotation(lhs))
+        [ret, ..rest] ->
+          glance.FunctionType(
+            [lhs, ..list.reverse(rest)] |> list.map(type_annotation),
+            type_annotation(ret),
+          )
+      }
+    }
     elm.Record(_) | elm.GenericRecord(_, _) ->
+      // TODO: Emit warning
       panic as "Multiple record type annotations are not supported"
+  }
+}
+
+fn flatten_function_type_annotation(
+  type_: elm.TypeAnnotation,
+) -> List(elm.TypeAnnotation) {
+  // Parses a recursive function type annotation into a list of
+  // argument types and a return type.
+
+  case type_ {
+    elm.FunctionType(arg, rest) -> {
+      let args = flatten_function_type_annotation(rest)
+      [arg, ..args]
+    }
+    _ -> [type_]
   }
 }

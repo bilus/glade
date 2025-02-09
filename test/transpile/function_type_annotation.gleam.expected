@@ -1,0 +1,3 @@
+pub type Fun(a) {
+  Fun(fn(Maybe(a), Int, Int) -> Maybe(a))
+}

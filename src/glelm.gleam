@@ -14,17 +14,13 @@ pub type RuntimeError(ctx) {
   InternalError(String)
 }
 
-pub fn run() {
+pub fn run() -> Result(String, RuntimeError(a)) {
   let elm_src =
     "
-type Foo a
-     = Foo { field1: (Bar a, Int) }
-     | Bar { field1: Maybe a,
-             field2: Either a String }
-     | Baz (Foo ())
+type Fun a = Fun (T1 -> T2 -> T3)
 "
-  io.print(elm_src)
-  io.println("")
+  io.println(elm_src)
+  io.println("*** PARSING")
   use elm_ast <- result.try(
     parser.run(elm_src, parser.module())
     |> result.map_error(ParserError),
@@ -45,27 +41,27 @@ type Foo a
   debug.log("*** GLEAM AST 2")
   debug.log(gleam_ast2)
 
-  Ok("")
+  Ok(gleam_src)
 }
 
 pub fn main() {
   // let _ = print_glance_output()
 
   case run() {
-    Ok(_) -> debug.log("Success")
-    Error(TranspileError(_)) -> debug.log("Transpile error")
+    Ok(_) -> io.println("Success!")
+    Error(TranspileError(_)) -> io.println("Transpile error")
     Error(ParserError(parser.LexerError(_))) -> {
-      debug.log("Lexer error")
+      io.println("Lexer error")
       // debug.log(e)
     }
     Error(ParserError(parser.ParserError([dead_end, ..]))) -> {
-      debug.log("Parser error")
+      io.println("Parser error")
       let de: nibble.DeadEnd(lexer.Token, Nil) = dead_end
-      debug.log(de)
-      debug.log("")
+      io.debug(de)
+      Nil
     }
-    Error(GlanceError(_)) -> debug.log("Glance error")
-    Error(InternalError(msg)) -> debug.log("Internal error: " <> msg)
-    _ -> debug.log("Unknown error")
+    Error(GlanceError(_)) -> io.println("Glance error")
+    Error(InternalError(msg)) -> io.println("Internal error: " <> msg)
+    _ -> io.println("Unknown error")
   }
 }

@@ -167,7 +167,7 @@ pub fn new() -> Lexer {
       lexer.token("..", DoubleDot),
       // Operators (single-character)
       lexer.token("+", Plus),
-      lexer.token("-", Minus),
+      lexer.symbol("-", "\\s", Minus),
       lexer.token("*", Multiply),
       lexer.token("/", Divide),
       lexer.token("^", Power),

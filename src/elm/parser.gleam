@@ -49,11 +49,26 @@ fn value_constructor() -> Parser(ast.ValueConstructor, ctx) {
 
 fn type_annotation() -> Parser(ast.TypeAnnotation, ctx) {
   one_of([
+    function_type_annotation()
+      |> backtrackable()
+      |> inspect("function_type_annotation"),
     typed_annotation() |> backtrackable() |> inspect("typed_annotation"),
     type_annotation_term()
       |> backtrackable()
       |> inspect("type_annotation_term"),
   ])
+}
+
+fn function_type_annotation() -> nibble.Parser(
+  ast.TypeAnnotation,
+  lexer.Token,
+  ctx,
+) {
+  use arg <- do(type_annotation_term())
+  use _ <- do(token(lexer.Arrow))
+  use ret <- do(type_annotation())
+  succeed(ast.FunctionType(arg, ret))
+  |> inspect("DONE: function_type_annotation")
 }
 
 fn parens_type_annotation() -> nibble.Parser(
