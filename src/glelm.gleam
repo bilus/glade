@@ -17,10 +17,11 @@ pub type RuntimeError(ctx) {
 pub fn run() {
   let elm_src =
     "
-type FooBar a
-    = Bar (Result String a)
-    | Baz (Int, Int)
-    | Qux { str: String, int: a }
+type Foo a
+     = Foo { field1: (Bar a, Int) }
+     | Bar { field1: Maybe a,
+             field2: Either a String }
+     | Baz (Foo ())
 "
   io.print(elm_src)
   io.println("")
@@ -68,76 +69,3 @@ pub fn main() {
     _ -> debug.log("Unknown error")
   }
 }
-// fn print_glance_output() {
-//   let gleam =
-//     "
-// pub type Foo(a) {
-//   Foo(field: String, bar: a)
-//   Baz(String)
-// }
-// "
-//   use ast <- result.try(glance.module(gleam))
-//   io.debug(ast)
-//   let source = glance_printer.print(ast)
-//   io.print(source)
-//   Ok(Nil)
-// }
-// fn calculator() {
-//   use ast <- result.try(
-//     lexer.new()
-//     |> lexer.run("1 * 2 + 3")
-//     |> result.map(nibble.run(_, expression())),
-//   )
-//   Ok(ast)
-// }
-
-// type Expression {
-//   Addition(Expression, Expression)
-//   Multiplication(Expression, Expression)
-//   Number(Float)
-// }
-
-// fn term() {
-//   nibble.one_of([number(), sum()])
-// }
-
-// fn sum() {
-//   use lhs <- nibble.do(expression())
-//   use _ <- nibble.do(nibble.token(lexer.Plus))
-//   use rhs <- nibble.do(expression())
-//   nibble.succeed(Addition(lhs, rhs))
-// }
-
-// fn number() {
-//   nibble.take_map("Expected float or int literal", fn(tok) {
-//     case tok {
-//       lexer.FloatLiteral(f) -> Some(Number(f))
-//       lexer.IntLiteral(i) -> Some(Number(int.to_float(i)))
-//       _ -> None
-//     }
-//   })
-// }
-
-// fn expression() {
-//   nibble.one_of([sub_expression(), number()])
-// }
-
-// fn sub_expression() {
-//   use num <- nibble.do(number())
-//   use expr <- nibble.do({
-//     use op <- nibble.take_map("Expected operator")
-//     case op {
-//       lexer.Plus -> Some(Addition)
-//       lexer.Multiply -> Some(Multiplication)
-//       _ -> None
-//     }
-//   })
-//   use rhs <- nibble.do(expression())
-//   nibble.succeed(expr(num, rhs))
-// }
-
-// pub fn main() {
-//   use ast <- result.try(calculator())
-//   io.debug(ast)
-//   Ok("")
-// }

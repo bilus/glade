@@ -1,6 +1,7 @@
 module Main exposing (..)
 
 import Browser
+import Debug
 import Elm.Interface exposing (Exposed(..))
 import Elm.Parser
 import Elm.Syntax.File as File
@@ -122,12 +123,5 @@ view { src } =
 
 main : Program () Model Msg
 main =
-    Browser.sandbox { init = init, update = update, view = view }
-
-
-type Foo a
-    = Bar Maybe a
-
-
-a =
-    Bar "a" 1
+    Browser.sandbox
+        { init = init, update = update, view = view }

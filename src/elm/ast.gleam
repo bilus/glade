@@ -53,6 +53,7 @@ pub type TypeAnnotation {
   Tupled(List(TypeAnnotation))
   Typed(TypeName, List(TypeAnnotation))
   Record(RecordDefinition)
+  GenericRecord(GenericName, RecordDefinition)
 }
 
 pub type RecordDefinition {

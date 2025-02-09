@@ -57,7 +57,13 @@ pub fn custom_type(
 fn variant(constructor: elm.ValueConstructor) -> glance.Variant {
   let elm.ValueConstructor(elm.TypeName(name), arguments) = constructor
   case arguments {
-    [elm.Record(elm.RecordDefinition(fields))] -> record(name, fields)
+    // Currently, generic records are represented as regular
+    // records in Gleam.
+    // TODO: Emit a warning.
+    [elm.Record(def)] | [elm.GenericRecord(_, def)] -> {
+      let elm.RecordDefinition(fields) = def
+      record(name, fields)
+    }
     _ ->
       glance.Variant(
         name,
@@ -95,7 +101,7 @@ fn type_annotation(ann: elm.TypeAnnotation) -> glance.Type {
         None,
         annotations |> list.map(type_annotation),
       )
-    elm.Record(_record_definition) ->
+    elm.Record(_) | elm.GenericRecord(_, _) ->
       panic as "Multiple record type annotations are not supported"
   }
 }
