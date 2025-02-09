@@ -4,8 +4,8 @@ import elm/lexer
 import gleam/option.{None, Some}
 import gleam/result
 import nibble.{
-  backtrackable, do, eof, fail, lazy, many, one_of, replace, sequence, succeed,
-  take_map, token,
+  backtrackable, do, eof, fail, lazy, many, one_of, optional, replace, sequence,
+  succeed, take_map, token,
 }
 
 pub type Parser(a, ctx) =
@@ -106,11 +106,16 @@ pub fn record_type_annotation() -> nibble.Parser(
 ) {
   use _ <- do(token(lexer.LBrace))
 
+  use generic_name <- do(optional(generic_record_type()) |> backtrackable())
+
   use fields <- do(sequence(record_field(), token(lexer.Comma)))
 
   use _ <- do(token(lexer.RBrace))
 
-  succeed(ast.Record(ast.RecordDefinition(fields)))
+  succeed(case generic_name {
+    Some(name) -> ast.GenericRecord(name, ast.RecordDefinition(fields))
+    None -> ast.Record(ast.RecordDefinition(fields))
+  })
   |> inspect("DONE: record_type_annotation")
 }
 
@@ -121,6 +126,12 @@ fn record_field() -> nibble.Parser(ast.RecordField, lexer.Token, ctx) {
   debug.log(type_annotation)
   succeed(ast.RecordField(name, type_annotation))
   |> inspect("DONE: record_field")
+}
+
+fn generic_record_type() {
+  use generic_name <- do(generic_type_annotation())
+  use _ <- do(token(lexer.VerticalBar))
+  succeed(generic_name)
 }
 
 fn record_field_name() -> nibble.Parser(ast.RecordFieldName, lexer.Token, ctx) {
