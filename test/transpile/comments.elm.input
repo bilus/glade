@@ -1,0 +1,6 @@
+module Comments
+
+-- Comment 1
+-- Comment 2
+type {-- Comment 3 --} A {- Multiline
+comment -}= {--} A -- Comment 4
