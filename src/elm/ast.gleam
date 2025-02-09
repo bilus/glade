@@ -25,28 +25,17 @@ pub type ValueConstructor {
   ValueConstructor(name: TypeName, arguments: List(TypeAnnotation))
 }
 
-// type TypeAnnotation
-//     = GenericType String
-//     | Typed
-//           (Node ( ModuleName, String ))
-//           (List (Node TypeAnnotation))
-//     | Unit
-//     | Tupled (List (Node TypeAnnotation))
-//     | Record RecordDefinition
-//     | GenericRecord (Node String) (Node RecordDefinition)
-//     | FunctionTypeAnnotation
-//           (Node TypeAnnotation)
-//           (Node TypeAnnotation)
-// Custom type for different type annotations. For example:
-
-// GenericType: a
-// Typed: Maybe (Int -> String)
-// Unit: ()
-// Tuples: (a, b, c)
-// Record: { name : String}
-// GenericRecord: { a | name : String}
-// FunctionTypeAnnotation: Int -> String
-
+/// Custom type for different type annotations.
+///
+/// For example:
+///
+///   GenericType: a
+///   Typed: Maybe (Int -> String)
+///   Unit: ()
+///   Tuples: (a, b, c)
+///   Record: { name : String}
+///   GenericRecord: { a | name : String}
+///   FunctionType: Int -> String
 pub type TypeAnnotation {
   GenericType(GenericName)
   Unit
@@ -54,6 +43,7 @@ pub type TypeAnnotation {
   Typed(TypeName, List(TypeAnnotation))
   Record(RecordDefinition)
   GenericRecord(GenericName, RecordDefinition)
+  FunctionType(TypeAnnotation, TypeAnnotation)
 }
 
 pub type RecordDefinition {
