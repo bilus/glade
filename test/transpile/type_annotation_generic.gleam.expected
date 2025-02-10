@@ -1,14 +1,14 @@
-pub type Maybe(a) {
+type Maybe(a) {
   Just(a)
   Nothing()
 }
 
-pub type Maybe2(a) {
+type Maybe2(a) {
   Just2(a)
   Nothing2()
 }
 
-pub type Maybe3(a) {
+type Maybe3(a) {
   Just3(a)
   Nothing3()
 }

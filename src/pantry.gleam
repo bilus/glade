@@ -17,9 +17,9 @@ pub type StatefulParser(a, tok, ctx, s) {
 pub fn parse(
   tokens: List(lexer.Token(tok)),
   stateful_parser: StatefulParser(a, tok, ctx, s),
-  initial_state: s,
+  initial_ctx: s,
 ) -> Result(a, List(nibble.DeadEnd(tok, ctx))) {
-  let parser = run(stateful_parser, initial_state)
+  let parser = run(stateful_parser, initial_ctx)
   nibble.run(tokens, parser)
   |> result.map(fn(sa) { sa.0 })
 }

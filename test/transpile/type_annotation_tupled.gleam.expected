@@ -1,4 +1,4 @@
-pub type Foo(a, b) {
+type Foo(a, b) {
   Foo(a)
   Bar(#(a, b))
 }

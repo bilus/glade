@@ -25,12 +25,20 @@ pub fn transpile_test() {
 }
 
 fn run(tc: TestCase) -> Nil {
-  let assert Ok(elm_ast) =
+  let elm_ast =
     tc.elm
-    |> parser.run(parser.module())
-  transpile.module(elm_ast)
-  |> result.map(transpile.print)
-  |> should_equal(tc.expected_gleam, _, tc.name)
+    |> parser.parse(parser.module())
+  case elm_ast {
+    Ok(elm_ast) ->
+      transpile.module(elm_ast)
+      |> transpile.run(transpile.initial_ctx())
+      |> result.map(transpile.print)
+      |> should_equal(tc.expected_gleam, _, tc.name)
+    Error(e) -> {
+      io.println("Error in test: " <> tc.name <> " " <> string.inspect(e))
+      should.fail()
+    }
+  }
 }
 
 fn load_test_cases() -> Result(List(TestCase), file.FileError) {
@@ -42,7 +50,6 @@ fn load_test_cases() -> Result(List(TestCase), file.FileError) {
     |> list.filter(string.ends_with(_, input_ext))
     |> list.map(string.drop_end(_, string.length(input_ext)))
     |> list.map(fn(test_name) {
-      io.println("Loading test: " <> test_name)
       use input <- result.try(file.read(test_name <> input_ext))
       use expected_gleam <- result.try(file.read(test_name <> expected_ext))
       Ok(TestCase(test_name, input, Ok(expected_gleam)))

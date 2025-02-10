@@ -217,12 +217,72 @@ pub fn module() -> Parser(ast.Module, ctx) {
   use _ <- do(token(lexer.ModuleKeyword) |> inspect("module_keyword"))
   use _ <- do(layout_start())
   use name <- do(module_name() |> inspect("module_name"))
+  use exposing <- do(nibble.or(
+    exposing() |> inspect("exposing"),
+    ast.ExposingNothing,
+  ))
   use _ <- do(layout_end())
-  use custom_types <- do(many(
+  use declarations <- do(many(
     custom_type_declaration() |> inspect("custom_type_declaration"),
   ))
   use _ <- do(eof())
-  succeed(ast.Module(name, declarations: custom_types))
+  succeed(ast.Module(name, declarations:, exposing:))
+}
+
+fn exposing() -> Parser(ast.Exposing, ctx) {
+  use _ <- do(token(lexer.ExposingKeyword))
+  use _ <- do(token(lexer.LParen))
+  use exposed <- do(
+    one_of([
+      expose_all(),
+      sequence(
+        top_level_expose() |> inspect("exposed_value"),
+        token(lexer.Comma),
+      )
+        |> nibble.map(ast.Explicit),
+    ]),
+  )
+  use _ <- do(token(lexer.RParen))
+  succeed(exposed)
+  |> inspect("DONE: exposing")
+}
+
+fn top_level_expose() -> Parser(ast.TopLevelExpose, ctx) {
+  one_of([
+    type_expose() |> inspect("type_expose"),
+    function_expose() |> inspect("function_expose"),
+  ])
+}
+
+fn type_expose() -> nibble.Parser(ast.TopLevelExpose, lexer.Token, ctx) {
+  use name <- do(type_name())
+  use is_opaque <- do(
+    optional({
+      use _ <- do(token(lexer.LParen))
+      use _ <- do(token(lexer.DoubleDot))
+      use _ <- do(token(lexer.RParen))
+      succeed(False)
+    })
+    |> nibble.map(option.unwrap(_, True)),
+  )
+  succeed(ast.TypeOrAliasExpose(name, is_opaque))
+}
+
+fn function_expose() -> Parser(ast.TopLevelExpose, ctx) {
+  {
+    use tok <- take_map("Expected function or type name")
+    case tok {
+      lexer.Identifier(name) -> Some(ast.FunctionExpose(ast.FunctionName(name)))
+      _ -> None
+    }
+  }
+  |> inspect("DONE: top_level_expose")
+}
+
+fn expose_all() -> Parser(ast.Exposing, ctx) {
+  use _ <- do(token(lexer.DoubleDot))
+  succeed(ast.ExposingAll)
+  |> inspect("DONE: expose_all")
 }
 
 fn module_name() -> nibble.Parser(String, lexer.Token, ctx) {
@@ -238,7 +298,10 @@ fn custom_type_declaration() -> nibble.Parser(ast.Declaration, lexer.Token, ctx)
   |> nibble.map(ast.CustomTypeDeclaration)
 }
 
-pub fn run(elm_source: String, parser: Parser(a, ctx)) -> Result(a, Error(ctx)) {
+pub fn parse(
+  elm_source: String,
+  parser: Parser(a, ctx),
+) -> Result(a, Error(ctx)) {
   use tokens <- result.try(
     lexer.new()
     |> lexer.run(elm_source)
