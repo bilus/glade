@@ -175,7 +175,7 @@ pub fn new() -> Lexer {
       lexer.token("<", LessThan),
       lexer.token(">", GreaterThan),
       lexer.token("=", Eq),
-      lexer.token(".", Dot),
+      lexer.symbol(".", "\\s", Dot),
       lexer.token("|", VerticalBar),
       // Structural tokens
       lexer.token("(", LParen),

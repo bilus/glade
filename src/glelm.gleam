@@ -16,22 +16,24 @@ pub type RuntimeError(ctx) {
 
 pub fn run() -> Result(String, RuntimeError(a)) {
   let elm_src =
-    "module Comments
+    "
+module Exposing exposing (PublicType1, PublicType2, func1)
 
--- Comment
-type A {-Foo--}= {-
-  Comment
--} A Int--Comment
+type PublicType = PublicType
+
+-- TODO: Add function here.
 "
   io.println(elm_src)
   use elm_ast <- result.try(
-    parser.run(elm_src, parser.module())
+    parser.parse(elm_src, parser.module())
     |> result.map_error(ParserError),
   )
   debug.log("*** ELM AST")
   debug.log(elm_ast)
   use gleam_ast <- result.try(
-    transpile.module(elm_ast) |> result.map_error(TranspileError),
+    transpile.module(elm_ast)
+    |> transpile.run(transpile.initial_ctx())
+    |> result.map_error(TranspileError),
   )
   debug.log("*** GLEAM AST")
   debug.log(gleam_ast)

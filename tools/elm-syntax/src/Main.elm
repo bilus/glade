@@ -13,6 +13,11 @@ import Json.Encode as Encode
 import Json.Print exposing (prettyString)
 
 
+type Foo
+    = Foo Int
+    | Bar String
+
+
 type alias Model =
     { src : String }
 

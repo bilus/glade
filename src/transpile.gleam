@@ -1,28 +1,39 @@
 import elm/ast as elm
+import eval.{type Eval}
 import glance
 import glance_printer
 import gleam/list
 import gleam/option.{None}
-import gleam/result
+import transpile/context.{type Context}
 
 pub type Error {
   Error(glance.Error)
 }
 
-pub fn module(elm_ast: elm.Module) -> Result(glance.Module, Error) {
-  use custom_types <- result.try(
+pub type Transpiler(a) =
+  Eval(a, Error, Context)
+
+pub fn initial_ctx() -> Context {
+  context.new()
+}
+
+pub fn module(elm_ast: elm.Module) -> Transpiler(glance.Module) {
+  use _ <- eval.try(elm_ast.exposing |> context.handle_exposing)
+  use custom_types <- eval.try(
     elm_ast.declarations
     |> list.map(fn(decl) {
-      case decl {
-        elm.CustomTypeDeclaration(custom_type) -> Ok(custom_type)
-      }
+      let elm.CustomTypeDeclaration(custom_type) = decl
+      custom_type
     })
-    |> result.values()
-    |> list.map(fn(type_) { custom_type(type_, True) })
-    |> result.all(),
+    |> list.map(fn(type_) { custom_type(type_) })
+    |> eval.all(),
   )
-  let gleam_module = glance.Module([], custom_types, [], [], [])
-  Ok(gleam_module)
+  glance.Module([], custom_types, [], [], [])
+  |> eval.return
+}
+
+pub fn run(t: Transpiler(a), s: Context) -> Result(a, Error) {
+  eval.run(t, s)
 }
 
 pub fn print(module: glance.Module) -> String {
@@ -34,24 +45,29 @@ pub fn print(module: glance.Module) -> String {
 
 pub fn custom_type(
   type_: elm.Type,
-  public: Bool,
-) -> Result(glance.Definition(glance.CustomType), Error) {
-  let elm.Type(elm.TypeName(name), generics, constructors) = type_
+) -> Transpiler(glance.Definition(glance.CustomType)) {
+  use _ <- eval.try(context.handle_custom_type(type_))
 
-  Ok(glance.Definition(
+  let elm.Type(elm.TypeName(name), generics, constructors) = type_
+  use context.Visibility(is_public:, is_opaque:) <- eval.try(context.visibility(
+    name,
+  ))
+
+  glance.Definition(
     [],
     glance.CustomType(
       name,
-      case public {
+      case is_public {
         True -> glance.Public
         False -> glance.Private
       },
-      False,
+      is_opaque,
       generics,
       constructors
         |> list.map(variant),
     ),
-  ))
+  )
+  |> eval.return
 }
 
 fn variant(constructor: elm.ValueConstructor) -> glance.Variant {

@@ -1,0 +1,11 @@
+module Exposing exposing (PublicType1(..), PublicType2, func1)
+
+type PrivateType = PrivateType
+
+type PublicType1 = PublicType1
+
+type PublicType2 = PublicType2
+
+-- TODO: Add function
+-- func1 : Int
+-- func1 = 4

@@ -1,0 +1,5 @@
+module ExposingAll exposing (..)
+
+type PublicType = PublicType
+
+-- TODO: Add function here.

@@ -1,0 +1,11 @@
+type PrivateType {
+  PrivateType()
+}
+
+pub type PublicType1 {
+  PublicType1()
+}
+
+pub opaque type PublicType2 {
+  PublicType2()
+}
