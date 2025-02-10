@@ -1,22 +1,80 @@
 # glelm
 
-TODO: Description, usage as cli, usage as a library.
+Elm-to-Gleam transpiler.
+
+WORK-IN-PROGRESS.
+
+Currently supported:
+* Naive transpilling of type declarations (e.g. `Maybe` is `Maybe` in generated Gleam code).
+* Sum types
+* Typed Records
+* Function types
+* Tuples
+* Unit
+
+Coming up soon:
+* Type aliases `type alias A = B`
+* Untyped records  `type alias R = { foo: Int }`
+
+Unsupported:
+* Function declarations
+* Ports
+
 
 [![Package Version](https://img.shields.io/hexpm/v/glelm)](https://hex.pm/packages/glelm)
 [![Hex Docs](https://img.shields.io/badge/hex-docs-ffaff3)](https://hexdocs.pm/glelm/)
 
 ```sh
-gleam add glelm@1
+cat samples/Sample1.elm
 ```
+
+```elm
+module Sample1 exposing (Declaration(..), Node)
+
+
+-- Elm declaration
+module Sample1 exposing (Declaration(..), Node)
+
+{-| Elm declaration
+-}
+type Declaration
+    = FunctionDeclaration Function
+    | AliasDeclaration TypeAlias
+    | CustomTypeDeclaration Type
+    | PortDeclaration Signature
+    | InfixDeclaration Infix
+    | Destructuring
+        { pattern : Node Pattern
+        , expression : Node Expression
+        }
+
+
+{-| Provides additional context
+-}
+type Node a
+    = Node Range a
+```
+
+``` sh
+gleam run samples/Sample1.elm
+[...]
+```
+
 ```gleam
-import glelm
-
-pub fn main() {
-  // TODO: An example of the project in use
+pub type Declaration {
+  FunctionDeclaration(Function)
+  AliasDeclaration(TypeAlias)
+  CustomTypeDeclaration(Type)
+  PortDeclaration(Signature)
+  InfixDeclaration(Infix)
+  Destructuring(pattern: Node(Pattern), expression: Node(Expression))
 }
-```
 
-Further documentation can be found at <https://hexdocs.pm/glelm>.
+pub opaque type Node(a) {
+  Node(Range, a)
+}
+Success!
+```
 
 ## Development
 

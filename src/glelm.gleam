@@ -1,13 +1,17 @@
+import argv
 import debug
 import elm/lexer
 import elm/parser
 import glance
+import gleam/int
 import gleam/io
 import gleam/result
 import nibble
+import simplifile as file
 import transpile
 
 pub type RuntimeError(ctx) {
+  ArgumentError(String)
   ParserError(parser.Error(ctx))
   TranspileError(transpile.Error)
   GlanceError(glance.Error)
@@ -15,15 +19,12 @@ pub type RuntimeError(ctx) {
 }
 
 pub fn run() -> Result(String, RuntimeError(a)) {
-  let elm_src =
-    "
-module Exposing exposing (PublicType1, PublicType2, func1)
-
-type PublicType = PublicType
-
--- TODO: Add function here.
-"
-  io.println(elm_src)
+  use elm_src <- result.try(case argv.load().arguments {
+    [elm_file] ->
+      file.read(elm_file)
+      |> result.map_error(fn(e) { ArgumentError(file.describe_error(e)) })
+    _ -> Error(ArgumentError("Missing path to an .elm source file"))
+  })
   use elm_ast <- result.try(
     parser.parse(elm_src, parser.module())
     |> result.map_error(ParserError),
@@ -54,9 +55,17 @@ pub fn main() {
 
   case run() {
     Ok(_) -> io.println("Success!")
+    Error(ArgumentError(msg)) -> io.println(msg)
     Error(TranspileError(_)) -> io.println("Transpile error")
-    Error(ParserError(parser.LexerError(_))) -> {
-      io.println("Lexer error")
+    Error(ParserError(parser.NoMatchingTokenError(row, col, lexeme))) -> {
+      io.println(
+        "No such token "
+        <> lexeme
+        <> " at "
+        <> int.to_string(row)
+        <> ":"
+        <> int.to_string(col),
+      )
       // debug.log(e)
     }
     Error(ParserError(parser.ParserError([dead_end, ..]))) -> {
