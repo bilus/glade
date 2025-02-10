@@ -1,6 +1,6 @@
-import elm/lexer
 import gleam/list
 import gleeunit/should
+import glelm/elm/lexer
 
 type TestCase {
   TestCase(name: String, elm_source: String, expected_tokens: List(lexer.Token))

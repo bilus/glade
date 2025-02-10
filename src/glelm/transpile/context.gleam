@@ -1,9 +1,9 @@
-import elm/ast as elm
 import eval.{type Eval}
 import eval/context
 import gleam/dict
 import gleam/list
-import gleam/option.{type Option, None, Some}
+import gleam/option.{None, Some}
+import glelm/elm/ast as elm
 
 pub type Export {
   TypeOrAliasExport(is_opaque: Bool)
@@ -30,14 +30,14 @@ pub fn new() -> Context {
 }
 
 pub fn handle_exposing(exposing: elm.Exposing) -> Eval(Nil, e, Context) {
-  use ctx <- context.update()
+  use _ <- context.update()
   let exposing = case exposing {
     elm.ExposingNothing -> NoPublic
     elm.ExposingAll -> AllPublic(dict.new())
     elm.Explicit(list) ->
       SomePublic(list |> list.map(expose_to_export) |> dict.from_list)
   }
-  Context(..ctx, exposing: exposing)
+  Context(exposing: exposing)
 }
 
 fn expose_to_export(expose: elm.TopLevelExpose) -> #(String, Export) {
@@ -58,7 +58,7 @@ pub fn handle_custom_type(type_: elm.Type) -> Eval(Nil, e, Context) {
       AllPublic(exposing |> dict.insert(name, TypeOrAliasExport(False)))
     other -> other
   }
-  Context(..ctx, exposing: exposing)
+  Context(exposing: exposing)
 }
 
 pub type Visibility {
