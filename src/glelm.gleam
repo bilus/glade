@@ -16,12 +16,12 @@ pub type RuntimeError(ctx) {
 
 pub fn run() -> Result(String, RuntimeError(a)) {
   let elm_src =
-    "module Comments
+    "
+module Exposing exposing (..)
 
--- Comment
-type A {-Foo--}= {-
-  Comment
--} A Int--Comment
+type PublicType = PublicType
+
+-- TODO: Add function here.
 "
   io.println(elm_src)
   use elm_ast <- result.try(

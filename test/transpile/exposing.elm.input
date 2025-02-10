@@ -1,0 +1,7 @@
+module Exposing exposing (PublicType1, PublicType2)
+
+type PrivateType = PrivateType
+
+type PublicType1 = PublicType1
+
+type PublicType2 = PublicType2

@@ -1,6 +1,6 @@
 import gleam/io
 
-const is_enabled = False
+const is_enabled = True
 
 pub fn log(x: a) -> a {
   case is_enabled {

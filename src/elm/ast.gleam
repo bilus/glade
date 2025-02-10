@@ -1,5 +1,5 @@
 pub type Module {
-  Module(name: String, declarations: List(Declaration))
+  Module(name: String, declarations: List(Declaration), exposing: Exposing)
 }
 
 pub type Declaration {
@@ -55,4 +55,21 @@ pub type RecordFieldName =
 
 pub type RecordField {
   RecordField(name: RecordFieldName, type_: TypeAnnotation)
+}
+
+pub type Exposing {
+  ExposingAll
+  ExposingNothing
+  Explicit(List(TopLevelExpose))
+}
+
+pub type FunctionName {
+  FunctionName(name: String)
+}
+
+pub type TopLevelExpose {
+  // TODO: Support infix operators. Only needed for projects using elm-parser.
+  // InfixExpose(String)
+  FunctionExpose(FunctionName)
+  TypeOrAliasExpose(TypeName)
 }
