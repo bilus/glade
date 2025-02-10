@@ -1,9 +1,9 @@
-import debug
-import elm/ast
-import elm/lexer
 import gleam/list
 import gleam/option.{None, Some}
 import gleam/result
+import glelm/debug
+import glelm/elm/ast
+import glelm/elm/lexer
 import nibble.{
   backtrackable, do, eof, fail, lazy, many, one_of, optional, replace, sequence,
   succeed, take_map, token,

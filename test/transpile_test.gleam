@@ -1,4 +1,3 @@
-import elm/parser
 import gap
 import gap/styled_comparison.{type StyledComparison}
 import gleam/io
@@ -6,8 +5,9 @@ import gleam/list
 import gleam/result
 import gleam/string
 import gleeunit/should
+import glelm/elm/parser
+import glelm/transpile
 import simplifile as file
-import transpile
 
 type TestCase {
   TestCase(

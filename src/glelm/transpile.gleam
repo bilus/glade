@@ -1,10 +1,10 @@
-import elm/ast as elm
 import eval.{type Eval}
 import glance
 import glance_printer
 import gleam/list
 import gleam/option.{None}
-import transpile/context.{type Context}
+import glelm/elm/ast as elm
+import glelm/transpile/context.{type Context}
 
 pub type Error {
   Error(glance.Error)

@@ -1,14 +1,14 @@
 import argv
-import debug
-import elm/lexer
-import elm/parser
 import glance
 import gleam/int
 import gleam/io
 import gleam/result
+import glelm/debug
+import glelm/elm/lexer
+import glelm/elm/parser
+import glelm/transpile
 import nibble
 import simplifile as file
-import transpile
 
 pub type RuntimeError(ctx) {
   ArgumentError(String)
