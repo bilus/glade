@@ -33,7 +33,7 @@ pub type Token {
   //-----------------------------------
   // Composite keywords
   //-----------------------------------
-  TypeAliasKeyword
+  AliasKeyword
   PortModuleKeyword
   ModuleKeyword
 
@@ -139,7 +139,7 @@ pub fn new() -> Lexer {
       lexer.keyword("where", "\\s+", WhereKeyword),
       lexer.keyword("do", "\\s+", DoKeyword),
       // Composite keywords
-      lexer.keyword("type alias", "\\s+", TypeAliasKeyword),
+      lexer.keyword("alias", "\\s+", AliasKeyword),
       lexer.keyword("port module", "\\s+", PortModuleKeyword),
       lexer.keyword("module", "\\s+", ModuleKeyword),
       // Basic keywords

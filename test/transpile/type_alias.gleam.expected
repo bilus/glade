@@ -1,0 +1,19 @@
+type State(state, value) {
+  State(fn(state) -> #(value, state))
+}
+
+type Bar(a) {
+  Bar(baz: Maybe(a), qux: a)
+}
+
+pub type Foo =
+  Maybe(Int)
+
+type Option(a) =
+  Maybe(a)
+
+type Pair(a, b) =
+  #(a, b)
+
+type Unit =
+  Nil

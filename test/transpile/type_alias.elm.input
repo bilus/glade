@@ -1,0 +1,14 @@
+module TypeAlias exposing (Foo)
+
+type alias Foo = Maybe Int
+
+type alias Option a = Maybe a
+
+type alias Pair a b = (a, b)
+
+type alias Unit = ()
+
+type alias State state value =
+      state -> ( value, state )
+
+type alias Bar a = { baz: Maybe a, qux: a }

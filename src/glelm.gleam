@@ -41,12 +41,6 @@ pub fn run() -> Result(String, RuntimeError(a)) {
   let gleam_src = transpile.print(gleam_ast)
   debug.log("*** GLEAM SRC")
   io.print(gleam_src)
-  use gleam_ast2 <- result.try(
-    glance.module(gleam_src) |> result.map_error(GlanceError),
-  )
-  debug.log("*** GLEAM AST 2")
-  debug.log(gleam_ast2)
-
   Ok(gleam_src)
 }
 

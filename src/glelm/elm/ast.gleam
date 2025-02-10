@@ -4,6 +4,7 @@ pub type Module {
 
 pub type Declaration {
   CustomTypeDeclaration(Type)
+  AliasDeclaration(TypeAlias)
 }
 
 pub type TypeName {
@@ -23,6 +24,21 @@ pub type Type {
 
 pub type ValueConstructor {
   ValueConstructor(name: TypeName, arguments: List(TypeAnnotation))
+}
+
+/// Type alias that defines the syntax for an alias for a type.
+///
+/// Example:
+///    type alias Person =
+///        { name : String
+///          , age : Int
+///        }
+pub type TypeAlias {
+  TypeAlias(
+    name: TypeName,
+    generics: List(GenericName),
+    type_annotation: TypeAnnotation,
+  )
 }
 
 /// Custom type for different type annotations.

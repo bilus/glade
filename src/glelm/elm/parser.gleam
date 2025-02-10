@@ -222,11 +222,31 @@ pub fn module() -> Parser(ast.Module, ctx) {
     ast.ExposingNothing,
   ))
   use _ <- do(layout_end())
-  use declarations <- do(many(
-    custom_type_declaration() |> inspect("custom_type_declaration"),
-  ))
+  use declarations <- do(
+    many(
+      one_of([
+        custom_type_declaration()
+          |> backtrackable
+          |> inspect("custom_type_declaration"),
+        alias_declaration() |> backtrackable |> inspect("alias_declaration"),
+      ]),
+    ),
+  )
   use _ <- do(eof())
   succeed(ast.Module(name, declarations:, exposing:))
+}
+
+fn alias_declaration() -> nibble.Parser(ast.Declaration, lexer.Token, ctx) {
+  use _ <- do(token(lexer.TypeKeyword))
+  use _ <- do(layout_start())
+  use _ <- do(token(lexer.AliasKeyword))
+  use name <- do(type_name())
+  use generics <- do(many(generic_type_annotation()))
+  use _ <- do(token(lexer.Eq))
+  use type_annotation <- do(type_annotation())
+  use _ <- do(layout_end())
+  succeed(ast.TypeAlias(name:, generics:, type_annotation:))
+  |> nibble.map(ast.AliasDeclaration)
 }
 
 fn exposing() -> Parser(ast.Exposing, ctx) {
