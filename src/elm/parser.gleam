@@ -13,7 +13,7 @@ pub type Parser(a, ctx) =
   nibble.Parser(a, lexer.Token, ctx)
 
 pub type Error(ctx) {
-  LexerError(lexer.Error)
+  NoMatchingTokenError(row: Int, col: Int, lexeme: String)
   ParserError(List(nibble.DeadEnd(lexer.Token, ctx)))
 }
 
@@ -305,7 +305,9 @@ pub fn parse(
   use tokens <- result.try(
     lexer.new()
     |> lexer.run(elm_source)
-    |> result.map_error(LexerError),
+    |> result.map_error(fn(e) {
+      NoMatchingTokenError(row: e.row, col: e.col, lexeme: e.lexeme)
+    }),
   )
   debug.log("*** TOKENS ***")
   tokens
