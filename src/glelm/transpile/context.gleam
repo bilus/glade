@@ -50,9 +50,21 @@ fn expose_to_export(expose: elm.TopLevelExpose) -> #(String, Export) {
   }
 }
 
+// TODO: Merge handle_custom_type and handle_type_alias
 pub fn handle_custom_type(type_: elm.Type) -> Eval(Nil, e, Context) {
   use ctx: Context <- context.update()
   let elm.TypeName(name) = type_.name
+  let exposing = case ctx.exposing {
+    AllPublic(exposing) ->
+      AllPublic(exposing |> dict.insert(name, TypeOrAliasExport(False)))
+    other -> other
+  }
+  Context(exposing: exposing)
+}
+
+pub fn handle_type_alias(alias: elm.TypeAlias) -> Eval(Nil, e, Context) {
+  use ctx: Context <- context.update()
+  let elm.TypeName(name) = alias.name
   let exposing = case ctx.exposing {
     AllPublic(exposing) ->
       AllPublic(exposing |> dict.insert(name, TypeOrAliasExport(False)))

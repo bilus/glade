@@ -1,3 +1,6 @@
 module FunctionTypeAnnotation
 
 type Fun a = Fun ((Maybe a) -> Int -> Int -> (Maybe a))
+
+-- type State state value =
+--     State (state -> ( value, state ))
